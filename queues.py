@@ -52,3 +52,15 @@ class Stack(Queue):
 # lifo=Stack("1st", "2nd", "3rd")
 # for element in lifo:
 #     print(element)
+
+from heapq import heappop, heappush
+
+class PriorityQueue:
+    def __init__(self):
+        self._elements = []
+
+    def enqueue_with_priority(self, priority, value):
+        heappush(self._elements, (priority, value))
+
+    def dequeue(self):
+        return heappop(self._elements)
