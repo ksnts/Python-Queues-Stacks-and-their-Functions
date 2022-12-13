@@ -1,16 +1,16 @@
 import argparse
 from queue import LifoQueue, PriorityQueue, Queue
 import threading
-from random import randint
 from time import sleep
 from random import choice, randint
 from itertools import zip_longest
-
-from rich.align import Align
+from dataclasses import dataclass, field
+from enum import IntEnum
 from rich.columns import Columns
 from rich.console import Group
 from rich.live import Live
 from rich.panel import Panel
+from rich.align import Align
 
 QUEUE_TYPES = {
     "fifo": Queue,
@@ -20,10 +20,8 @@ QUEUE_TYPES = {
 
 def main(args):
     buffer = QUEUE_TYPES[args.queue]()
-    producers = [
-        Producer(args.producer_speed, buffer, PRODUCTS)
-        for _ in range(args.producers)
-    ]
+    producers = [Producer(args.producer_speed, buffer, PRODUCTS) for _ in range(args.producers)]
+        
     consumers = [
         Consumer(args.consumer_speed, buffer) for _ in range(args.consumers)
     ]
@@ -119,7 +117,6 @@ class Consumer(Worker):
             self.buffer.task_done()
             self.simulate_idle()
 
-
 class View:
     def __init__(self, buffer, producers, consumers):
         self.buffer = buffer
@@ -167,6 +164,21 @@ class View:
         )
         return Panel(align, height=5, title=title)
 
+@dataclass(order=True)
+class Product:
+    priority: int
+    label: str = field(compare=False)
 
+    def __str__(self):
+        return self.label
 
+class Priority(IntEnum):
+    HIGH = 1
+    MEDIUM = 2
+    LOW = 3
 
+PRIORITIZED_PRODUCTS = (
+    Product(Priority.HIGH, ":1st_place_medal:"),
+    Product(Priority.MEDIUM, ":2nd_place_medal:"),
+    Product(Priority.LOW, ":3rd_place_medal:"),
+)
