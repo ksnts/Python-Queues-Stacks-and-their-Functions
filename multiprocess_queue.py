@@ -1,10 +1,12 @@
 import time
 import multiprocessing
 import argparse
+import queue
 from hashlib import md5
 from string import ascii_lowercase
 from dataclasses import dataclass
 
+POISON_PILL = None
 
 class Combinations:
     def __init__(self, alphabet, length):
@@ -59,13 +61,13 @@ def reverse_md5(hash_value, alphabet=ascii_lowercase, max_length=6):
             if hashed == hash_value:
                 return text_bytes.decode("utf-8")
 
-# def main():
-#     t1 = time.perf_counter()
-#     text = reverse_md5("a9d1cbf71942327e98b40cf5ef38a960")
-#     print(f"{text} (found in {time.perf_counter() - t1:.1f}s)")
+def main():
+    t1 = time.perf_counter()
+    text = reverse_md5("a9d1cbf71942327e98b40cf5ef38a960")
+    print(f"{text} (found in {time.perf_counter() - t1:.1f}s)")
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
 
 def chunk_indices(length, num_chunks):
     start = 0
@@ -77,6 +79,8 @@ def chunk_indices(length, num_chunks):
         num_chunks -= 1
 
 def main(args):
+    t1 = time.perf_counter()
+
     queue_in = multiprocessing.Queue()
     queue_out = multiprocessing.Queue()
 
@@ -92,6 +96,18 @@ def main(args):
         combinations = Combinations(ascii_lowercase, text_length)
         for indices in chunk_indices(len(combinations), len(workers)):
             queue_in.put(Job(combinations, *indices))
+
+    while any(worker.is_alive() for worker in workers):
+        try:
+            solution = queue_out.get(timeout=0.1)
+            if solution:
+                t2 = time.perf_counter()
+                print(f"{solution} (found in {t2 - t1:.1f}s)")
+                break
+        except queue.Empty:
+            pass
+    else:
+        print("Unable to find a solution")
 
 def parse_args():
     parser = argparse.ArgumentParser()
