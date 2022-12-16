@@ -1,4 +1,6 @@
 import pika
+from kafka3 import KafkaProducer
+
 
 QUEUE_NAME = "mailbox"
 
@@ -12,3 +14,13 @@ with pika.BlockingConnection() as connection:
             routing_key=QUEUE_NAME,
             body=message.encode("utf-8")
         )
+        
+producer = KafkaProducer(bootstrap_servers="localhost:9092")
+while True:
+    message = input("Message: ")
+    producer.send(
+        topic="datascience",
+        value=message.encode("utf-8"),
+    )
+
+
