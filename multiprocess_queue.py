@@ -52,7 +52,7 @@ class Worker(multiprocessing.Process):
             if job is POISON_PILL:
                 self.queue_in.put(POISON_PILL)
                 break
-            
+
             if plaintext := job(self.hash_value):
                 self.queue_out.put(plaintext)
                 break
@@ -100,6 +100,8 @@ def main(args):
         combinations = Combinations(ascii_lowercase, text_length)
         for indices in chunk_indices(len(combinations), len(workers)):
             queue_in.put(Job(combinations, *indices))
+
+    queue_in.put(POISON_PILL)
 
     while any(worker.is_alive() for worker in workers):
         try:
