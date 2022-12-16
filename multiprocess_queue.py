@@ -49,6 +49,10 @@ class Worker(multiprocessing.Process):
     def run(self):
         while True:
             job = self.queue_in.get()
+            if job is POISON_PILL:
+                self.queue_in.put(POISON_PILL)
+                break
+            
             if plaintext := job(self.hash_value):
                 self.queue_out.put(plaintext)
                 break
@@ -123,3 +127,4 @@ def parse_args():
 
 if __name__ == "__main__":
     main(parse_args())
+
